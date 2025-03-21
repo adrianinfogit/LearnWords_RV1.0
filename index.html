@@ -1,244 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Language Test</title>
-  <style>
-    /* ...existing styles... */
-  </style>
+  <meta charset="UTF-8">
+  <title>Language Flashcards</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container" id="test-container">
-    <h1>Language Test</h1>
-    <div class="word-section">
-      <hr style="margin: 20px 0; border: 1px solid #ebebeb;">
-      <a href="second-page.html" class="btn" style="margin-right: 10px;">See Score</a>
-      <a href="third-page.html" class="btn">Hard Words Page</a>
-      <hr style="margin: 20px 0; border: 1px solid #ebebeb;">
-      <button class="btn" id="randomize-btn">Randomize Words</button>
-    </div>
-        
-    <div class="word-section">
-      <div id="original-word"></div>
-      <span id="translation"></span>
-    </div>
-    <div class="word-section">
-      <input type="text" id="user-guess" placeholder="Type your guess here..." />
-      <div></div>
-      <button class="btn" id="check-answer-btn">Check Answer</button>
-      <span id="feedback"></span>
-    </div>
-    <div class="word-section">
-      <button class="btn" id="next-word-btn">Next Word</button>
-      <button class="btn" id="show-translation-btn">Show Translation</button>
-    </div>
-
-    <div class="word-section">
-      <img src="hard-logo.png" alt="Hard" class="hard-logo" id="hard-logo">
-      &nbsp;&nbsp;&nbsp;&nbsp;
-      <img src="not-hard-logo.png" alt="Not Hard" class="not-hard-logo" id="not-hard-logo">
+  <div class="container">
+    <h1>Language Flashcards</h1>
+    <div id="flashcard">
+      <p id="original-word">Loading...</p>
+      <p id="translated-word" style="display: none;"></p>
+      <input type="text" id="user-answer" placeholder="Type translation here">
+      <div class="buttons">
+        <button id="submit-btn">Submit</button>
+        <button id="show-btn">Show Translation</button>
+        <button id="hard-btn">Hard</button>
+        <button id="next-btn" style="display: none;">Next</button>
+      </div>
+      <p id="feedback"></p>
     </div>
   </div>
-
-  <div class="finished-message hidden" id="finished">
-    You have completed the test!
-  </div>
-
-  <script>
-    let currentIndex = 0;
-    const wordQueue = [];
-    
-    // Variables for testing mode
-    let currentTestWords = [];
-    let isHardMode = false;
-
-    // HTML element references
-    const testContainer = document.getElementById('test-container');
-    const randomizeBtn = document.getElementById('randomize-btn');
-    const originalWord = document.getElementById('original-word');
-    const showTranslationBtn = document.getElementById('show-translation-btn');
-    const translation = document.getElementById('translation');
-    const userGuess = document.getElementById('user-guess');
-    const checkAnswerBtn = document.getElementById('check-answer-btn');
-    const feedback = document.getElementById('feedback');
-    const nextWordBtn = document.getElementById('next-word-btn');
-    const finishedMessage = document.getElementById('finished');
-    const hardLogo = document.getElementById('hard-logo');
-    const notHardLogo = document.getElementById('not-hard-logo');
-
-    // Fisher-Yates shuffle
-    function shuffleWords(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-    }
-
-    // Save state to local storage
-    function saveState() {
-      localStorage.setItem('currentIndex', currentIndex);
-      localStorage.setItem('wordQueue', JSON.stringify(wordQueue));
-      localStorage.setItem('words', JSON.stringify(currentTestWords));
-    }
-
-    // Load state from local storage
-    function loadState() {
-      const savedIndex = localStorage.getItem('currentIndex');
-      const savedQueue = localStorage.getItem('wordQueue');
-      const savedWords = localStorage.getItem('words');
-
-      if (savedIndex !== null) {
-        currentIndex = parseInt(savedIndex, 10);
-      }
-      if (savedQueue !== null) {
-        wordQueue.push(...JSON.parse(savedQueue));
-      }
-      if (savedWords !== null) {
-        currentTestWords = JSON.parse(savedWords);
-      }
-    }
-
-    // Load a word by index from currentTestWords
-    function loadWord(index) {
-      if (index < currentTestWords.length) {
-        originalWord.textContent = currentTestWords[index].original;
-        translation.textContent = currentTestWords[index].translated;
-        translation.style.display = 'none';
-        userGuess.value = '';
-        feedback.textContent = '';
-        feedback.style.color = 'black';
-        saveState();
-      }
-    }
-
-    // Show translation
-    showTranslationBtn.addEventListener('click', () => {
-      translation.style.display = 'inline';
-    });
-
-    // Initialize counters for correct and incorrect answers
-    let correctAnswers = 0;
-    let incorrectAnswers = 0;
-
-    // Load counters from local storage
-    function loadCounters() {
-      const savedCorrect = localStorage.getItem('correctAnswers');
-      const savedIncorrect = localStorage.getItem('incorrectAnswers');
-      if (savedCorrect !== null) {
-        correctAnswers = parseInt(savedCorrect, 10);
-      }
-      if (savedIncorrect !== null) {
-        incorrectAnswers = parseInt(savedIncorrect, 10);
-      }
-    }
-
-    // Save counters to local storage
-    function saveCounters() {
-      localStorage.setItem('correctAnswers', correctAnswers);
-      localStorage.setItem('incorrectAnswers', incorrectAnswers);
-    }
-
-    // Check user's answer using currentTestWords
-    checkAnswerBtn.addEventListener('click', () => {
-      const guess = userGuess.value.trim();
-      const correctAnswer = currentTestWords[currentIndex].translated.trim();
-      if (guess.toLowerCase() === correctAnswer.toLowerCase()) {
-        feedback.textContent = 'Correct!';
-        feedback.style.color = 'green';
-        correctAnswers++;
-      } else {
-        feedback.textContent = 'Wrong!';
-        feedback.style.color = 'red';
-        incorrectAnswers++;
-      }
-      saveCounters();
-    });
-
-    // Go to next word from currentTestWords
-    nextWordBtn.addEventListener('click', () => {
-      if (wordQueue.length > 0) {
-        currentIndex = wordQueue.shift();
-      } else {
-        currentIndex++;
-      }
-      if (currentIndex < currentTestWords.length) {
-        loadWord(currentIndex);
-      } else {
-        testContainer.classList.add('hidden');
-        finishedMessage.classList.remove('hidden');
-      }
-      saveState();
-    });
-
-    // Tag word as Hard and queue for later review if needed
-    function tagWord(tag) {
-      const taggedIndex = currentIndex;
-      // Update the tag on the current word
-      currentTestWords[currentIndex].tag = tag;
-      
-      // Move to the next word in the main list
-      currentIndex++;
-      
-      // For "Hard", add the current word index to the queue for later review
-      if (tag === 'Hard') {
-        wordQueue.push(taggedIndex);
-        wordQueue.push(taggedIndex);
-      }
-      
-      // Load the next word: if there are words left in the main list, use them first
-      if (currentIndex < currentTestWords.length) {
-        loadWord(currentIndex);
-      } else if (wordQueue.length > 0) {
-        currentIndex = wordQueue.shift();
-        loadWord(currentIndex);
-      } else {
-        testContainer.classList.add('hidden');
-        finishedMessage.classList.remove('hidden');
-      }
-      saveState();
-    }
-
-    hardLogo.addEventListener('click', () => tagWord('Hard'));
-
-    // Remove "Hard" tag and go to next word
-    notHardLogo.addEventListener('click', () => {
-      if (currentIndex < currentTestWords.length) {
-        currentTestWords[currentIndex].tag = '';
-        const wordIndex = currentTestWords.findIndex(word => word.original === currentTestWords[currentIndex].original);
-        if (wordIndex !== -1) {
-          currentTestWords[wordIndex].tag = '';
-          localStorage.setItem('words', JSON.stringify(currentTestWords));
-        }
-      }
-      nextWordBtn.click();
-    });
-
-    // Randomize words based on current mode
-    randomizeBtn.addEventListener('click', () => {
-      if (isHardMode) {
-        shuffleWords(currentTestWords);
-      } else {
-        shuffleWords(currentTestWords);
-      }
-      currentIndex = 0;
-      wordQueue.length = 0; // Clear the queue
-      loadWord(currentIndex);
-      testContainer.classList.remove('hidden');
-      finishedMessage.classList.add('hidden');
-      saveState();
-    });
-
-    // Fetch words from JSON file and initialize state
-    fetch('words.json')
-      .then(response => response.json())
-      .then(data => {
-        currentTestWords = data;
-        loadState();
-        loadCounters();
-        loadWord(currentIndex);
-      })
-      .catch(error => console.error('Error loading words:', error));
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
