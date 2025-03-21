@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hard Words</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .btn {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      background-color: #007BFF;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    #next-word-btn {
+      background-color: #05dad3;
+    }
+    #next-word-btn:hover {
+      background-color: #04c8d2;
+    }
+    #translation {
+      display: none;
+      font-style: italic;
+      margin-left: 10px;
+      color: #555;
+    }
+    #feedback {
+      margin-left: 10px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 60%;
+      max-width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    .finished-message {
+      text-align: center;
+      font-size: 1.2rem;
+      color: green;
+      margin-top: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+      }
+      #original-word {
+        font-size: 1.2rem;
+      }
+      .btn {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        margin: 5px auto;
+      }
+      input[type="text"] {
+        width: 80%;
+        max-width: 100%;
+      }
+      #feedback {
+        display: block;
+        margin-left: 0;
+        margin-top: 10px;
+      }
+    }
+    /* Style for the hard words list */
+    #hard-words-list {
+      margin-top: 20px;
+      text-align: left;
+    }
+    #hard-words-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    #hard-words-list li {
+      margin-bottom: 10px;
+    }
+    .btn + .btn {
+      margin-top: 20px; /* Add margin between consecutive buttons */
+    }
+    #original-word {
+      font-size: 6rem; /* Increased to twice its size */
+      margin-bottom: 10px;
+    }
+    .not-hard-logo {
+      width: 60px;
+      height: 70px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="test-container">
+    <h1>Hard Words</h1>
+
+    <div class="word-section">
+      <div id="original-word"></div>
+      <button class="btn" id="show-translation-btn">Show Translation</button>
+      <span id="translation"></span>
+    </div>
+
+    <div class="word-section">
+      <input type="text" id="user-guess" placeholder="Type your guess here..." />
+      <button class="btn" id="check-answer-btn">Check Answer</button>
+      <span id="feedback"></span>
+    </div>
+
+    <div class="word-section">
+      <button class="btn" id="next-word-btn">Next Word</button>
+      <img src="not-hard-logo.png" alt="Not Hard" class="not-hard-logo" id="not-hard-logo" style="margin-left: 10px;">
+    </div>
+
+    <div class="word-section">
+      <button class="btn" id="randomize-btn">Randomize Words</button>
+    </div>
+
+    <div class="word-section">
+      <button class="btn" id="show-hard-words-btn">Show All Hard Words</button>
+      <button class="btn hidden" id="hide-hard-words-btn">Hide Hard Words</button>
+    </div>
+
+    <div class="word-section"></div>
+      <button class="btn" id="clear-all-btn">Clear All</button>
+    </div>
+
+    <div class="word-section" style="margin-top: 20px;">
+      <a href="index.html" class="btn">Main Page</a>
+    </div>
+  </div>
+
+  <div class="finished-message hidden" id="finished">
+    You have completed the test!
+  </div>
+
+  <div id="hard-words-list" class="hidden">
+    <h2>All Hard Words</h2>
+    <ul id="hard-words-ul"></ul>
+  </div>
+
+  <script>
+    // Array of word pairs
+    const words = JSON.parse(localStorage.getItem('words')) || [];
+    const hardWords = words.filter(word => word.tag === 'Hard');
+
+    let currentIndex = 0;
+    const wordQueue = [];
+
+    // HTML element references
+    const testContainer = document.getElementById('test-container');
+    const randomizeBtn = document.getElementById('randomize-btn');
+    const originalWord = document.getElementById('original-word');
+    const showTranslationBtn = document.getElementById('show-translation-btn');
+    const translation = document.getElementById('translation');
+    const userGuess = document.getElementById('user-guess');
+    const checkAnswerBtn = document.getElementById('check-answer-btn');
+    const feedback = document.getElementById('feedback');
+    const nextWordBtn = document.getElementById('next-word-btn');
+    const notHardLogo = document.getElementById('not-hard-logo');
+    const finishedMessage = document.getElementById('finished');
+    const showHardWordsBtn = document.getElementById('show-hard-words-btn');
+    const hideHardWordsBtn = document.getElementById('hide-hard-words-btn');
+    const hardWordsList = document.getElementById('hard-words-list');
+    const hardWordsUl = document.getElementById('hard-words-ul');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+
+    // Fisher-Yates shuffle
+    function shuffleWords(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    // Load a word by index
+    function loadWord(index) {
+      if (index < hardWords.length) {
+        originalWord.textContent = hardWords[index].original;
+        translation.textContent = hardWords[index].translated;
+        translation.style.display = 'none';
+        userGuess.value = '';
+        feedback.textContent = '';
+        feedback.style.color = 'black';
+      }
+    }
+
+    // Show translation
+    showTranslationBtn.addEventListener('click', () => {
+      translation.style.display = 'inline';
+    });
+
+    // Check user's answer
+    checkAnswerBtn.addEventListener('click', () => {
+      const guess = userGuess.value.trim();
+      const correctAnswer = hardWords[currentIndex].translated.trim();
+      if (guess.toLowerCase() === correctAnswer.toLowerCase()) {
+        feedback.textContent = 'Correct!';
+        feedback.style.color = 'green';
+      } else {
+        feedback.textContent = 'Wrong!';
+        feedback.style.color = 'red';
+      }
+    });
+
+    // Go to next word
+    nextWordBtn.addEventListener('click', () => {
+      if (wordQueue.length > 0) {
+        currentIndex = wordQueue.shift();
+      } else {
+        currentIndex++;
+      }
+      if (currentIndex < hardWords.length) {
+        loadWord(currentIndex);
+      } else {
+        testContainer.classList.add('hidden');
+        finishedMessage.classList.remove('hidden');
+      }
+    });
+
+    // Remove "Hard" tag and go to next word
+    notHardLogo.addEventListener('click', () => {
+      if (currentIndex < hardWords.length) {
+        const wordIndex = words.findIndex(word => word.original === hardWords[currentIndex].original);
+        if (wordIndex !== -1) {
+          words[wordIndex].tag = '';
+          localStorage.setItem('words', JSON.stringify(words));
+        }
+      }
+      nextWordBtn.click();
+    });
+
+    // Shuffle words on button click
+    randomizeBtn.addEventListener('click', () => {
+      shuffleWords(hardWords);
+      currentIndex = 0;
+      wordQueue.length = 0; // Clear the queue
+      loadWord(currentIndex);
+      testContainer.classList.remove('hidden');
+      finishedMessage.classList.add('hidden');
+    });
+
+    // Show all hard words
+    showHardWordsBtn.addEventListener('click', () => {
+      hardWordsUl.innerHTML = '';
+      hardWords.forEach(word => {
+        const li = document.createElement('li');
+        li.textContent = `${word.original} - ${word.translated}`;
+        hardWordsUl.appendChild(li);
+      });
+      hardWordsList.classList.remove('hidden');
+      showHardWordsBtn.classList.add('hidden');
+      hideHardWordsBtn.classList.remove('hidden');
+    });
+
+    // Hide all hard words
+    hideHardWordsBtn.addEventListener('click', () => {
+      hardWordsList.classList.add('hidden');
+      showHardWordsBtn.classList.remove('hidden');
+      hideHardWordsBtn.classList.add('hidden');
+    });
+
+    // Clear all tags from all words
+    function clearAllTags() {
+      words.forEach(word => {
+        delete word.tag;
+      });
+      localStorage.setItem('words', JSON.stringify(words));
+      alert('All tags have been cleared.');
+    }
+
+    // Add event listener to the "Clear All" button
+    clearAllBtn.addEventListener('click', clearAllTags);
+
+    // Initialize
+    loadWord(currentIndex);
+  </script>
+</body>
+</html>
