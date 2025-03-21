@@ -1,0 +1,43 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+#flashcard p {
+  font-size: 1.2em;
+  margin: 10px 0;
+}
+
+#user-answer {
+  width: 80%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 1em;
+}
+
+.buttons {
+  margin-top: 15px;
+}
+
+.buttons button {
+  padding: 10px 20px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+#feedback {
+  font-weight: bold;
+  margin-top: 10px;
+}
