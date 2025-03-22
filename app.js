@@ -2,9 +2,8 @@ let deck = [];
 let hardQueue = []; // Each item: { card, target }
 let newWordCount = 0;
 let currentCard = null;
-
-// Add this line to the <head> section of your HTML file
-document.head.innerHTML += '<meta name="viewport" content="width=device-width, initial-scale=1">';
+let totalCards = 0;
+let correctCount = 0;
 
 // Load the words from the JSON file and shuffle them
 function loadCards() {
@@ -12,8 +11,10 @@ function loadCards() {
     .then(response => response.json())
     .then(data => {
       deck = data;
+      totalCards = deck.length;
       shuffle(deck);
       showNextCard();
+      updateStats();
     })
     .catch(error => {
       document.getElementById("original-word").textContent = "Error loading cards.";
@@ -23,6 +24,16 @@ function loadCards() {
 
 // Display the next flashcard, checking if any "hard" cards should be reinserted.
 function showNextCard() {
+  // Reset UI elements
+  document.getElementById("user-answer").value = "";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("translated-word").style.display = "none";
+  document.getElementById("next-btn").style.display = "none";
+  document.getElementById("submit-btn").style.display = "inline-flex";
+  document.getElementById("show-btn").style.display = "inline-flex";
+  document.getElementById("hard-btn").style.display = "inline-flex";
+  document.getElementById("easy-btn").style.display = "inline-flex";
+  
   // Check hardQueue: reinsert cards whose target has been reached
   hardQueue = hardQueue.filter(item => {
     if (newWordCount >= item.target) {
@@ -33,7 +44,12 @@ function showNextCard() {
   });
 
   if (deck.length === 0) {
-    document.getElementById("flashcard").innerHTML = "<h2>Session complete!</h2>";
+    document.getElementById("flashcard").innerHTML = `
+      <h2>Session complete!</h2>
+      <p>You've completed all the flashcards.</p>
+      <p>Correct answers: ${correctCount}/${totalCards}</p>
+      <button onclick="window.location.reload()">Start Over</button>
+    `;
     return;
   }
 
@@ -41,26 +57,62 @@ function showNextCard() {
   currentCard = deck.shift();
   newWordCount++; // Count this as a new word shown
 
-  // Update the flashcard display
-  document.getElementById("original-word").textContent = currentCard.original;
-  document.getElementById("translated-word").style.display = "none";
+  // Update the flashcard display with animation
+  const wordElement = document.getElementById("original-word");
+  
+  // Fade out
+  wordElement.style.opacity = 0;
+  
+  // After fade out, change content and fade in
+  setTimeout(() => {
+    wordElement.textContent = currentCard.original;
+    wordElement.style.opacity = 1;
+  }, 200);
+  
   document.getElementById("translated-word").textContent = currentCard.translated;
-  document.getElementById("user-answer").value = "";
-  document.getElementById("feedback").textContent = "";
+  
+  // Update progress bar
+  updateProgress();
+  
+  // Focus on the input field
+  setTimeout(() => {
+    document.getElementById("user-answer").focus();
+  }, 300);
+  
+  // Update stats display
+  updateStats();
 }
 
 // Simple case-insensitive check of the answer
 function checkAnswer() {
   const userInput = document.getElementById("user-answer").value.trim().toLowerCase();
   const correctAnswer = currentCard.translated.trim().toLowerCase();
+  const feedbackElement = document.getElementById("feedback");
+  
   if (userInput === correctAnswer) {
-    document.getElementById("feedback").textContent = "Correct!";
-    document.getElementById("feedback").style.color = "green";
+    feedbackElement.textContent = "Correct! 🎉";
+    feedbackElement.style.color = "var(--correct-color)";
+    feedbackElement.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+    feedbackElement.style.padding = "10px";
+    feedbackElement.style.borderRadius = "8px";
+    feedbackElement.classList.add("pulse");
+    correctCount++;
   } else {
-    document.getElementById("feedback").textContent = "Incorrect! Try again or click 'Show Translation'.";
-    document.getElementById("feedback").style.color = "red";
+    feedbackElement.textContent = "Incorrect. Try again or click 'Show Translation'.";
+    feedbackElement.style.color = "var(--incorrect-color)";
+    feedbackElement.style.backgroundColor = "rgba(244, 67, 54, 0.1)";
+    feedbackElement.style.padding = "10px";
+    feedbackElement.style.borderRadius = "8px";
+    feedbackElement.classList.add("pulse");
   }
-  document.getElementById("next-btn").style.display = "inline-block";
+  
+  // Remove the animation class after it completes
+  setTimeout(() => {
+    feedbackElement.classList.remove("pulse");
+  }, 500);
+  
+  document.getElementById("next-btn").style.display = "inline-flex";
+  document.getElementById("submit-btn").style.display = "none";
 }
 
 // Mark the current card as hard so that it will reappear after 10 new words.
@@ -68,18 +120,101 @@ function markAsHard() {
   // Schedule the card to reappear after 10 new words
   const target = newWordCount + 10;
   hardQueue.push({ card: currentCard, target: target });
-  document.getElementById("feedback").textContent = "Marked as hard. This card will reappear after 10 new words.";
-  document.getElementById("feedback").style.color = "orange";
+  
+  const feedbackElement = document.getElementById("feedback");
+  feedbackElement.textContent = "Marked as hard. Will reappear later.";
+  feedbackElement.style.color = "var(--hard-color)";
+  feedbackElement.style.backgroundColor = "rgba(255, 152, 0, 0.1)";
+  feedbackElement.style.padding = "10px";
+  feedbackElement.style.borderRadius = "8px";
+  
+  document.getElementById("next-btn").style.display = "inline-flex";
+  document.getElementById("submit-btn").style.display = "none";
+  document.getElementById("hard-btn").style.display = "none";
+  document.getElementById("easy-btn").style.display = "none";
+  
+  updateStats();
+}
+
+// Update the progress bar
+function updateProgress() {
+  const progressBar = document.getElementById("progress-bar");
+  const progress = (newWordCount / totalCards) * 100;
+  progressBar.style.width = `${progress}%`;
+}
+
+// Update stats display
+function updateStats() {
+  document.getElementById("remaining-count").textContent = `Cards remaining: ${deck.length}`;
+  document.getElementById("hard-count").textContent = `Hard cards: ${hardQueue.length}`;
 }
 
 // Event listeners for buttons
 document.getElementById("submit-btn").addEventListener("click", checkAnswer);
 
+// Also submit when pressing Enter in the input field
+document.getElementById("user-answer").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    checkAnswer();
+  }
+});
+
 document.getElementById("show-btn").addEventListener("click", () => {
-  document.getElementById("translated-word").style.display = "block";
+  const translatedElement = document.getElementById("translated-word");
+  translatedElement.style.display = "block";
+  translatedElement.classList.add("pulse");
+  
+  setTimeout(() => {
+    translatedElement.classList.remove("pulse");
+  }, 500);
+  
+  document.getElementById("next-btn").style.display = "inline-flex";
+  document.getElementById("submit-btn").style.display = "none";
 });
 
 document.getElementById("hard-btn").addEventListener("click", markAsHard);
+
+// Mark card as easy - remove it from the hard queue if present
+function markAsEasy() {
+  // Check if the current card is in the hard queue
+  const cardInHardQueue = hardQueue.findIndex(item => 
+    item.card.original === currentCard.original && 
+    item.card.translated === currentCard.translated
+  );
+  
+  const feedbackElement = document.getElementById("feedback");
+  
+  // If card is in hard queue, remove it
+  if (cardInHardQueue !== -1) {
+    hardQueue.splice(cardInHardQueue, 1);
+    feedbackElement.textContent = "Card removed from hard queue! ✓";
+    feedbackElement.style.color = "var(--correct-color)";
+    feedbackElement.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+  } else {
+    // If not in hard queue, just acknowledge
+    feedbackElement.textContent = "Card marked as easy ✓";
+    feedbackElement.style.color = "var(--correct-color)";
+    feedbackElement.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+  }
+  
+  feedbackElement.style.padding = "10px";
+  feedbackElement.style.borderRadius = "8px";
+  feedbackElement.classList.add("pulse");
+  
+  // Remove the animation class after it completes
+  setTimeout(() => {
+    feedbackElement.classList.remove("pulse");
+  }, 500);
+  
+  document.getElementById("next-btn").style.display = "inline-flex";
+  document.getElementById("submit-btn").style.display = "none";
+  document.getElementById("hard-btn").style.display = "none";
+  document.getElementById("easy-btn").style.display = "none";
+  
+  updateStats();
+}
+
+document.getElementById("easy-btn").addEventListener("click", markAsEasy);
 
 document.getElementById("next-btn").addEventListener("click", showNextCard);
 
