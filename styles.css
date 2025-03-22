@@ -1,8 +1,13 @@
 body {
   font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
   margin: 0;
-  padding: 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f0f0f0;
 }
 
 .container {
@@ -11,6 +16,16 @@ body {
   background-color: #fff;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+#flashcard {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 90%;
+  width: 400px;
   text-align: center;
 }
 
@@ -37,7 +52,32 @@ body {
   font-size: 1em;
 }
 
+button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ddd;
+}
+
 #feedback {
   font-weight: bold;
   margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+  #flashcard {
+    width: 100%;
+    padding: 10px;
+  }
+
+  button {
+    width: 100%;
+    margin: 5px 0;
+  }
 }
