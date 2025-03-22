@@ -44,7 +44,6 @@ function showNextCard() {
   document.getElementById("translated-word").textContent = currentCard.translated;
   document.getElementById("user-answer").value = "";
   document.getElementById("feedback").textContent = "";
-  document.getElementById("next-btn").style.display = "none";
 }
 
 // Simple case-insensitive check of the answer
