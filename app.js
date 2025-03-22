@@ -3,6 +3,9 @@ let hardQueue = []; // Each item: { card, target }
 let newWordCount = 0;
 let currentCard = null;
 
+// Add this line to the <head> section of your HTML file
+document.head.innerHTML += '<meta name="viewport" content="width=device-width, initial-scale=1">';
+
 // Load the words from the JSON file and shuffle them
 function loadCards() {
   fetch('words.json')
