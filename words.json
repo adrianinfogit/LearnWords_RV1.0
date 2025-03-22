@@ -1,13 +1,5 @@
 [
   { "original": "eine Provinz", "translated": "une province" },
   { "original": "ein Ereignis", "translated": "un événement" },
-  { "original": "sich abspielen", "translated": "se dérouler" },
-  { "original": "umziehen", "translated": "déménager" },
-  { "original": "jdn. konjugiert wie manger", "translated": "déménager" },
-  { "original": "ich ziehe um", "translated": "je déménage" },
-  { "original": "wir ziehen um", "translated": "nous déménageons" },
-  { "original": "ich bin umgezogen", "translated": "j'ai déménagé" },
-  { "original": "ein Gegenstand", "translated": "un objet" },
-  { "original": "ein Blick", "translated": "un regard" }
-  // ... include all other entries as needed.
+  { "original": "sich abspielen", "translated": "se dérouler" }
 ]
